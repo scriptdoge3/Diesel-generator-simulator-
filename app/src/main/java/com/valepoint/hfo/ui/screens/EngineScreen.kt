@@ -1,6 +1,5 @@
 package com.valepoint.hfo.ui.screens
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -28,6 +26,9 @@ import com.valepoint.hfo.ui.widgets.RaiseLower
 import com.valepoint.hfo.ui.widgets.Readout
 import com.valepoint.hfo.ui.widgets.RoundGauge
 import com.valepoint.hfo.ui.widgets.SectionPanel
+import com.valepoint.hfo.ui.widgets.GaugeGrid
+import com.valepoint.hfo.ui.widgets.GaugeSpec
+import com.valepoint.hfo.ui.widgets.WrapRow
 import com.valepoint.hfo.ui.widgets.Selector
 
 @Composable
@@ -36,27 +37,14 @@ fun EngineScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
     val p = vm.plant
 
     Column(modifier.padding(8.dp)) {
-        Row(Modifier.horizontalScroll(rememberScrollState())) {
-            RoundGauge(
-                p.rpm, 0.0, 600.0, "RPM", "ENGINE SPEED",
-                diameter = 112.dp, majorTicks = 6, redFrom = 550.0, decimals = 0
+        GaugeGrid(
+            listOf(
+                GaugeSpec(p.rpm, 0.0, 600.0, "RPM", "ENGINE SPEED", majorTicks = 6, redFrom = 550.0, decimals = 0),
+                GaugeSpec(p.scavBar, 0.0, 3.0, "BAR", "SCAVENGE AIR", majorTicks = 6, decimals = 2),
+                GaugeSpec(p.exhMeanC, 0.0, 700.0, "DEG C", "EXH MEAN", majorTicks = 7, redFrom = 480.0, decimals = 0),
+                GaugeSpec(p.airBar, 0.0, 32.0, "BAR", "STARTING AIR", majorTicks = 8, greenBand = 18.0..30.0, decimals = 1),
             )
-            Spacer(Modifier.width(6.dp))
-            RoundGauge(
-                p.scavBar, 0.0, 3.0, "BAR", "SCAVENGE AIR",
-                diameter = 112.dp, majorTicks = 6, decimals = 2
-            )
-            Spacer(Modifier.width(6.dp))
-            RoundGauge(
-                p.exhMeanC, 0.0, 700.0, "DEG C", "EXH MEAN",
-                diameter = 112.dp, majorTicks = 7, redFrom = 480.0, decimals = 0
-            )
-            Spacer(Modifier.width(6.dp))
-            RoundGauge(
-                p.airBar, 0.0, 32.0, "BAR", "STARTING AIR",
-                diameter = 112.dp, majorTicks = 8, greenBand = 18.0..30.0, decimals = 1
-            )
-        }
+        )
 
         Spacer(Modifier.height(8.dp))
 
@@ -113,25 +101,25 @@ fun EngineScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
                 p.log("Governor set to ${p.ctl.govMode.label}.", 0)
             }
             RaiseLower(
-                "SPEED / LOAD SETTING",
-                "${"%.1f".format(p.ctl.speedRefRpm)} rpm  (${"%.0f".format((p.ctl.speedRefRpm / Spec.RATED_RPM - 1.0) * 100.0 / (p.ctl.droopPct / 100.0))} % load)",
+                "SPEED / LOAD SETTING", "${"%.1f".format(p.ctl.speedRefRpm)} rpm",
                 onRaise = { p.raiseSpeed(1.0) }, onLower = { p.raiseSpeed(-1.0) }
+            )
+            Readout(
+                "RACK DEMAND",
+                "${"%.0f".format((p.ctl.speedRefRpm / Spec.RATED_RPM - 1.0) * 100.0 / (p.ctl.droopPct / 100.0))} %"
             )
             Readout("DROOP", "${"%.1f".format(p.ctl.droopPct)} %")
             Readout("LOAD LIMIT", "${p.ctl.loadLimitPct.toInt()} %")
-            Row {
+            WrapRow {
                 PushButton("LIMIT -", P.PanelHigh) {
                     p.ctl.loadLimitPct = (p.ctl.loadLimitPct - 5).coerceAtLeast(20.0)
                 }
-                Spacer(Modifier.width(6.dp))
                 PushButton("LIMIT +", P.PanelHigh) {
                     p.ctl.loadLimitPct = (p.ctl.loadLimitPct + 5).coerceAtMost(110.0)
                 }
-                Spacer(Modifier.width(6.dp))
                 PushButton("DROOP -", P.PanelHigh) {
                     p.ctl.droopPct = (p.ctl.droopPct - 0.5).coerceAtLeast(2.0)
                 }
-                Spacer(Modifier.width(6.dp))
                 PushButton("DROOP +", P.PanelHigh) {
                     p.ctl.droopPct = (p.ctl.droopPct + 0.5).coerceAtMost(8.0)
                 }
@@ -141,7 +129,7 @@ fun EngineScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(8.dp))
 
         SectionPanel("STARTING") {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            WrapRow {
                 PanelSwitch(
                     "TURNING\nGEAR", p.ctl.turningGear, onLabel = "IN", offLabel = "OUT",
                     enabled = p.rpm < 5.0
@@ -159,17 +147,15 @@ fun EngineScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
                 ) { p.ctl.compressorRun = it }
             }
             Spacer(Modifier.height(6.dp))
-            Row {
+            WrapRow {
                 PushButton(
                     "START", P.LampGreen,
                     enabled = p.state == EngineState.STOPPED && p.startInterlocks().isEmpty()
                 ) { p.requestStart() }
-                Spacer(Modifier.width(8.dp))
                 PushButton(
                     "STOP", P.LampAmber,
                     enabled = p.state == EngineState.RUNNING || p.state == EngineState.FIRING
                 ) { p.requestStop() }
-                Spacer(Modifier.width(8.dp))
                 PushButton("EMERG STOP", P.LampRed, enabled = p.state != EngineState.STOPPED) {
                     p.emergencyStop()
                 }

@@ -71,6 +71,17 @@ compressor failures, governor hunting, control air leaks and turbocharger foulin
 Events fire on their own at an adjustable rate, and every one can also be
 provoked by hand from the LOG page.
 
+## On a phone
+
+The panel is laid out for a phone held in portrait and adapts upwards from
+there. Instruments are placed in a grid that carries two dials across a 360 dp
+phone, three or four on a tablet, so nothing is ever hidden off the side of the
+screen. Rows of switches and push buttons wrap rather than clip. The fuel and
+cooling mimics have two layouts: a wide one that reads left to right, and a tall
+one for a phone where the process runs down the screen instead. The tab strip
+carries its own alarm marker, because the alarms page is usually scrolled out of
+sight.
+
 ## Pages
 
 `UNIT` `ENGINE` `FUEL OIL` `COOLING` `ELECTRICAL` `SYSTEM` `ALARMS` `LOG` `NOTES`

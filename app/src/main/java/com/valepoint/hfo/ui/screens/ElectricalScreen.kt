@@ -1,6 +1,5 @@
 package com.valepoint.hfo.ui.screens
 
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,9 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,12 +23,16 @@ import com.valepoint.hfo.ui.SimViewModel
 import com.valepoint.hfo.ui.theme.P
 import com.valepoint.hfo.ui.widgets.EdgewiseMeter
 import com.valepoint.hfo.ui.widgets.IndicatorLamp
+import com.valepoint.hfo.ui.widgets.PanelSlider
 import com.valepoint.hfo.ui.widgets.PanelSwitch
 import com.valepoint.hfo.ui.widgets.PushButton
 import com.valepoint.hfo.ui.widgets.RaiseLower
 import com.valepoint.hfo.ui.widgets.Readout
 import com.valepoint.hfo.ui.widgets.RoundGauge
 import com.valepoint.hfo.ui.widgets.SectionPanel
+import com.valepoint.hfo.ui.widgets.GaugeGrid
+import com.valepoint.hfo.ui.widgets.GaugeSpec
+import com.valepoint.hfo.ui.widgets.WrapRow
 import com.valepoint.hfo.ui.widgets.Selector
 import com.valepoint.hfo.ui.widgets.SyncLamps
 import com.valepoint.hfo.ui.widgets.Synchroscope
@@ -51,7 +52,10 @@ fun ElectricalScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
                     angleDeg = p.syncAngleDeg,
                     slipHz = p.slipHz,
                     live = busLive && !p.breakerClosed,
-                    diameter = 138.dp
+                    diameter = 138.dp,
+                    // Once the machine is on the bars the instrument is out of
+                    // circuit; saying "bus dead" there would be a lie.
+                    idleText = if (p.breakerClosed) "ON BARS" else "BUS DEAD"
                 )
                 Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {
@@ -99,13 +103,12 @@ fun ElectricalScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
                 )
             }
             Spacer(Modifier.height(6.dp))
-            Row {
+            WrapRow {
                 PushButton(
-                    "CLOSE\nBREAKER", P.LampRed,
+                    "CLOSE BREAKER", P.LampRed,
                     enabled = !p.breakerClosed && p.state == com.valepoint.hfo.sim.EngineState.RUNNING
                 ) { p.closeBreaker() }
-                Spacer(Modifier.width(8.dp))
-                PushButton("OPEN\nBREAKER", P.LampGreen, enabled = p.breakerClosed) {
+                PushButton("OPEN BREAKER", P.LampGreen, enabled = p.breakerClosed) {
                     p.openBreaker("operator")
                 }
             }
@@ -113,27 +116,14 @@ fun ElectricalScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
 
         Spacer(Modifier.height(8.dp))
 
-        Row(Modifier.horizontalScroll(rememberScrollState())) {
-            RoundGauge(
-                if (p.breakerClosed) p.genMw else 0.0, -2.0, 14.0, "MW", "REAL POWER",
-                diameter = 112.dp, majorTicks = 8, redFrom = 12.6, decimals = 2
+        GaugeGrid(
+            listOf(
+                GaugeSpec(if (p.breakerClosed) p.genMw else 0.0, -2.0, 14.0, "MW", "REAL POWER", majorTicks = 8, redFrom = 12.6, decimals = 2),
+                GaugeSpec(if (p.breakerClosed) p.genMvar else 0.0, -6.0, 10.0, "MVAR", "REACTIVE", majorTicks = 8, decimals = 2),
+                GaugeSpec(p.statorA, 0.0, 1200.0, "AMPS", "STATOR CURRENT", majorTicks = 6, redFrom = Spec.RATED_AMPS, decimals = 0),
+                GaugeSpec(p.fieldA, 0.0, 1200.0, "AMPS", "FIELD CURRENT", majorTicks = 6, decimals = 0),
             )
-            Spacer(Modifier.width(6.dp))
-            RoundGauge(
-                if (p.breakerClosed) p.genMvar else 0.0, -6.0, 10.0, "MVAR", "REACTIVE",
-                diameter = 112.dp, majorTicks = 8, decimals = 2
-            )
-            Spacer(Modifier.width(6.dp))
-            RoundGauge(
-                p.statorA, 0.0, 1200.0, "AMPS", "STATOR CURRENT",
-                diameter = 112.dp, majorTicks = 6, redFrom = Spec.RATED_AMPS, decimals = 0
-            )
-            Spacer(Modifier.width(6.dp))
-            RoundGauge(
-                p.fieldA, 0.0, 1200.0, "AMPS", "FIELD CURRENT",
-                diameter = 112.dp, majorTicks = 6, decimals = 0
-            )
-        }
+        )
 
         Spacer(Modifier.height(8.dp))
 
@@ -165,12 +155,9 @@ fun ElectricalScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
                     onRaise = { p.raiseVolts(0.05) }, onLower = { p.raiseVolts(-0.05) }
                 )
             } else {
-                Text("FIELD RHEOSTAT", style = MaterialTheme.typography.bodySmall, color = P.LegendDim)
-                Slider(
-                    value = p.ctl.fieldRheostat.toFloat(),
-                    onValueChange = { p.ctl.fieldRheostat = it.toDouble() },
-                    valueRange = 0f..1f
-                )
+                PanelSlider("FIELD RHEOSTAT", p.ctl.fieldRheostat.toFloat()) {
+                    p.ctl.fieldRheostat = it.toDouble()
+                }
             }
             Readout("LOAD ANGLE", "${p.loadAngleDeg.toInt()} deg", color = if (abs(p.loadAngleDeg) > 60) P.LampAmber else P.Legend)
             Readout(
@@ -196,13 +183,10 @@ fun ElectricalScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
                 "%.1f rpm".format(p.ctl.speedRefRpm),
                 onRaise = { p.raiseSpeed(1.0) }, onLower = { p.raiseSpeed(-1.0) }
             )
-            Row {
+            WrapRow {
                 PushButton("- 5", P.PanelHigh) { p.raiseSpeed(-5.0) }
-                Spacer(Modifier.width(6.dp))
                 PushButton("- 1", P.PanelHigh) { p.raiseSpeed(-1.0) }
-                Spacer(Modifier.width(6.dp))
                 PushButton("+ 1", P.PanelHigh) { p.raiseSpeed(1.0) }
-                Spacer(Modifier.width(6.dp))
                 PushButton("+ 5", P.PanelHigh) { p.raiseSpeed(5.0) }
             }
             Spacer(Modifier.height(6.dp))

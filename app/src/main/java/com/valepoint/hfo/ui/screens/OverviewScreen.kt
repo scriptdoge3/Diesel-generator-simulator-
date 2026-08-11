@@ -1,7 +1,6 @@
 package com.valepoint.hfo.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,11 +20,14 @@ import com.valepoint.hfo.sim.Spec
 import com.valepoint.hfo.ui.SimViewModel
 import com.valepoint.hfo.ui.theme.P
 import com.valepoint.hfo.ui.widgets.EdgewiseMeter
+import com.valepoint.hfo.ui.widgets.GaugeGrid
+import com.valepoint.hfo.ui.widgets.GaugeSpec
 import com.valepoint.hfo.ui.widgets.IndicatorLamp
 import com.valepoint.hfo.ui.widgets.PushButton
 import com.valepoint.hfo.ui.widgets.Readout
 import com.valepoint.hfo.ui.widgets.RoundGauge
 import com.valepoint.hfo.ui.widgets.SectionPanel
+import com.valepoint.hfo.ui.widgets.WrapRow
 
 @Composable
 fun OverviewScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
@@ -58,29 +59,26 @@ fun OverviewScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
             Spacer(Modifier.height(8.dp))
         }
 
-        Row(Modifier.horizontalScroll(rememberScrollState())) {
-            RoundGauge(
-                value = if (p.breakerClosed) p.genMw else 0.0,
-                min = -2.0, max = 14.0, label = "MW", unit = "MEGAWATTS",
-                diameter = 118.dp, majorTicks = 8, redFrom = 12.6, decimals = 2
+        GaugeGrid(
+            listOf(
+                GaugeSpec(
+                    if (p.breakerClosed) p.genMw else 0.0, -2.0, 14.0, "MW", "MEGAWATTS",
+                    majorTicks = 8, redFrom = 12.6, decimals = 2
+                ),
+                GaugeSpec(
+                    p.grid.frequency, 45.0, 55.0, "Hz", "SYSTEM FREQ",
+                    majorTicks = 5, greenBand = 49.5..50.5, decimals = 2
+                ),
+                GaugeSpec(
+                    p.terminalKv, 0.0, 13.2, "kV", "STATOR VOLTS",
+                    majorTicks = 6, redFrom = 12.1, decimals = 2
+                ),
+                GaugeSpec(
+                    p.rpm, 0.0, 600.0, "RPM", "ENGINE SPEED",
+                    majorTicks = 6, redFrom = 550.0, decimals = 0
+                ),
             )
-            Spacer(Modifier.width(6.dp))
-            RoundGauge(
-                value = p.grid.frequency,
-                min = 45.0, max = 55.0, label = "Hz", unit = "SYSTEM FREQ",
-                diameter = 118.dp, majorTicks = 5, greenBand = 49.5..50.5, decimals = 2
-            )
-            Spacer(Modifier.width(6.dp))
-            RoundGauge(
-                value = p.terminalKv, min = 0.0, max = 13.2, label = "kV", unit = "STATOR VOLTS",
-                diameter = 118.dp, majorTicks = 6, redFrom = 12.1, decimals = 2
-            )
-            Spacer(Modifier.width(6.dp))
-            RoundGauge(
-                value = p.rpm, min = 0.0, max = 600.0, label = "RPM", unit = "ENGINE SPEED",
-                diameter = 118.dp, majorTicks = 6, redFrom = 550.0, decimals = 0
-            )
-        }
+        )
 
         Spacer(Modifier.height(8.dp))
 
@@ -152,19 +150,17 @@ fun OverviewScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
 
         SectionPanel("UNIT CONTROL") {
             val blocks = p.startInterlocks()
-            Row {
+            WrapRow {
                 PushButton(
                     "START", P.LampGreen,
                     enabled = p.state == EngineState.STOPPED && blocks.isEmpty(),
                     subLabel = "AIR"
                 ) { p.requestStart() }
-                Spacer(Modifier.width(8.dp))
                 PushButton(
                     "STOP", P.LampAmber,
                     enabled = p.state == EngineState.RUNNING || p.state == EngineState.FIRING
                 ) { p.requestStop() }
-                Spacer(Modifier.width(8.dp))
-                PushButton("EMERG\nSTOP", P.LampRed, enabled = p.state != EngineState.STOPPED) {
+                PushButton("EMERG STOP", P.LampRed, enabled = p.state != EngineState.STOPPED) {
                     p.emergencyStop()
                 }
             }

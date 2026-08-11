@@ -342,6 +342,7 @@ fun Synchroscope(
     live: Boolean,
     modifier: Modifier = Modifier,
     diameter: Dp = 140.dp,
+    idleText: String = "BUS DEAD",
 ) {
     val paint = remember { Paint() }
     Box(modifier.size(diameter), contentAlignment = Alignment.Center) {
@@ -380,7 +381,7 @@ fun Synchroscope(
                     if (kotlin.math.abs(slipHz) < 0.3) P.LampGreen else P.LampAmber, paint, bold = true
                 )
             } else {
-                panelText("BUS DEAD", c.x, c.y + r * 0.05f, r * 0.17f, P.LampAmber, paint, bold = true)
+                panelText(idleText, c.x, c.y + r * 0.05f, r * 0.17f, P.LampAmber, paint, bold = true)
             }
         }
     }

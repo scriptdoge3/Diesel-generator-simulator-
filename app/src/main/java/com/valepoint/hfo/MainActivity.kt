@@ -51,9 +51,12 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+// Terse, the way a panel is actually engraved, so that more of them fit
+// across a phone before the strip has to be scrolled.
 private val TABS = listOf(
-    "UNIT", "ENGINE", "FUEL OIL", "COOLING", "ELECTRICAL", "SYSTEM", "ALARMS", "LOG", "NOTES"
+    "UNIT", "ENGINE", "FUEL", "COOL", "ELEC", "SYSTEM", "ALARMS", "LOG", "NOTES"
 )
+private const val ALARM_TAB = 6
 
 @Composable
 fun StationApp(vm: SimViewModel = viewModel()) {
@@ -74,15 +77,23 @@ fun StationApp(vm: SimViewModel = viewModel()) {
                     contentColor = P.Brass,
                     edgePadding = 4.dp,
                 ) {
+                    val unack = vm.plant.ann.unacknowledgedCount()
                     TABS.forEachIndexed { i, name ->
+                        // The alarms page is often scrolled out of sight, so the
+                        // strip carries its own lamp.
+                        val alarming = i == ALARM_TAB && unack > 0
                         Tab(
                             selected = tab == i,
                             onClick = { tab = i },
                             text = {
                                 Text(
-                                    name,
+                                    if (alarming) "$name*" else name,
                                     style = MaterialTheme.typography.bodySmall,
-                                    color = if (tab == i) P.Brass else P.LegendDim
+                                    color = when {
+                                        alarming -> P.LampRed
+                                        tab == i -> P.Brass
+                                        else -> P.LegendDim
+                                    }
                                 )
                             }
                         )

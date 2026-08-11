@@ -105,7 +105,7 @@ fun PanelSwitch(
 ) {
     Column(
         modifier
-            .width(78.dp)
+            .width(72.dp)
             .clickable(enabled = enabled) { onToggle(!on) }
             .padding(2.dp),
         horizontalAlignment = Alignment.CenterHorizontally
@@ -239,6 +239,33 @@ fun RaiseLower(
         PushButton("LOWER", P.PanelHigh, onPress = onLower)
         Box(Modifier.width(8.dp))
         PushButton("RAISE", P.PanelHigh, onPress = onRaise)
+    }
+}
+
+/** Slider in panel colours, used for the few continuously variable controls. */
+@Composable
+fun PanelSlider(
+    label: String,
+    value: Float,
+    modifier: Modifier = Modifier,
+    range: ClosedFloatingPointRange<Float> = 0f..1f,
+    onChange: (Float) -> Unit,
+) {
+    Column(modifier.fillMaxWidth()) {
+        Text(label, style = MaterialTheme.typography.bodySmall, color = P.LegendDim)
+        androidx.compose.material3.Slider(
+            value = value,
+            onValueChange = onChange,
+            valueRange = range,
+            colors = androidx.compose.material3.SliderDefaults.colors(
+                thumbColor = P.Brass,
+                activeTrackColor = P.Brass,
+                inactiveTrackColor = Color(0xFF23281F),
+                activeTickColor = P.Brass,
+                inactiveTickColor = Color(0xFF23281F),
+            ),
+            modifier = Modifier.height(28.dp)
+        )
     }
 }
 

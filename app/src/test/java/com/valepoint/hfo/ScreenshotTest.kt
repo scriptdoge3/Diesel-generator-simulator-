@@ -16,6 +16,7 @@ import com.valepoint.hfo.ui.screens.CoolingScreen
 import com.valepoint.hfo.ui.screens.ElectricalScreen
 import com.valepoint.hfo.ui.screens.EngineScreen
 import com.valepoint.hfo.ui.screens.FuelScreen
+import com.valepoint.hfo.ui.screens.LogScreen
 import com.valepoint.hfo.ui.screens.OverviewScreen
 import com.valepoint.hfo.ui.screens.SystemScreen
 import com.valepoint.hfo.ui.theme.P
@@ -31,7 +32,7 @@ import java.io.File
 
 /** Draws each page into a bitmap so the panel layout can be inspected off device. */
 @RunWith(RobolectricTestRunner::class)
-@Config(sdk = [33], qualifiers = "w411dp-h891dp-xhdpi")
+@Config(sdk = [33], qualifiers = "w360dp-h780dp-xxhdpi")
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 class ScreenshotTest {
 
@@ -110,5 +111,6 @@ class ScreenshotTest {
         shoot("5-electrical") { ElectricalScreen(SimViewModel(autoRun = false)) }
         shoot("6-system") { SystemScreen(SimViewModel(autoRun = false)) }
         shoot("7-alarms") { AlarmScreen(SimViewModel(autoRun = false)) }
+        shoot("11-log") { LogScreen(SimViewModel(autoRun = false)) }
     }
 }

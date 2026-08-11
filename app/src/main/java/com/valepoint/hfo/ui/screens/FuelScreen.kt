@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -22,11 +21,13 @@ import com.valepoint.hfo.ui.SimViewModel
 import com.valepoint.hfo.ui.theme.P
 import com.valepoint.hfo.ui.widgets.EdgewiseMeter
 import com.valepoint.hfo.ui.widgets.FuelMimic
+import com.valepoint.hfo.ui.widgets.PanelSlider
 import com.valepoint.hfo.ui.widgets.PanelSwitch
 import com.valepoint.hfo.ui.widgets.PushButton
 import com.valepoint.hfo.ui.widgets.Readout
 import com.valepoint.hfo.ui.widgets.RoundGauge
 import com.valepoint.hfo.ui.widgets.SectionPanel
+import com.valepoint.hfo.ui.widgets.WrapRow
 import com.valepoint.hfo.ui.widgets.Selector
 
 @Composable
@@ -36,11 +37,7 @@ fun FuelScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
 
     Column(modifier.padding(8.dp)) {
         SectionPanel("HEAVY FUEL OIL SYSTEM", trailing = p.ctl.fuelMode.label) {
-            FuelMimic(
-                p, Modifier
-                    .fillMaxWidth()
-                    .height(230.dp)
-            )
+            FuelMimic(p, Modifier.fillMaxWidth())
         }
 
         Spacer(Modifier.height(8.dp))
@@ -76,12 +73,9 @@ fun FuelScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
                 }
             }
             if (!p.ctl.viscoAuto) {
-                Text("HEATER VALVE", style = MaterialTheme.typography.bodySmall, color = P.LegendDim)
-                Slider(
-                    value = p.ctl.heaterManual.toFloat(),
-                    onValueChange = { p.ctl.heaterManual = it.toDouble() },
-                    valueRange = 0f..1f
-                )
+                PanelSlider("HEATER VALVE", p.ctl.heaterManual.toFloat()) {
+                    p.ctl.heaterManual = it.toDouble()
+                }
             }
         }
 
@@ -111,14 +105,14 @@ fun FuelScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
         Spacer(Modifier.height(8.dp))
 
         SectionPanel("PUMPS AND TREATMENT") {
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            WrapRow {
                 PanelSwitch("TRANSFER\nPUMP", p.ctl.transferPump) { p.ctl.transferPump = it }
                 PanelSwitch("BOOSTER\nA", p.ctl.boosterA) { p.ctl.boosterA = it }
                 PanelSwitch("BOOSTER\nB", p.ctl.boosterB) { p.ctl.boosterB = it }
                 PanelSwitch("CIRC\nPUMP", p.ctl.circPump) { p.ctl.circPump = it }
             }
             Spacer(Modifier.height(6.dp))
-            Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+            WrapRow {
                 PanelSwitch("SETTLING\nHEATER", p.ctl.settlingHeater, onLabel = "ON", offLabel = "OFF") {
                     p.ctl.settlingHeater = it
                 }
@@ -136,15 +130,10 @@ fun FuelScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
                 }
             }
             Spacer(Modifier.height(4.dp))
-            Text(
+            PanelSlider(
                 "PURIFIER FEED RATE  ${(p.ctl.purifierFeed * 100).toInt()} %",
-                style = MaterialTheme.typography.bodySmall, color = P.LegendDim
-            )
-            Slider(
-                value = p.ctl.purifierFeed.toFloat(),
-                onValueChange = { p.ctl.purifierFeed = it.toDouble().coerceIn(0.2, 1.0) },
-                valueRange = 0.2f..1f
-            )
+                p.ctl.purifierFeed.toFloat(), range = 0.2f..1f
+            ) { p.ctl.purifierFeed = it.toDouble().coerceIn(0.2, 1.0) }
             Readout(
                 "FEED TEMPERATURE", "${p.purifierFeedTempC.toInt()} C",
                 color = if (p.purifierFeedTempC < 90 && p.purifierRunning) P.LampAmber else P.Legend
@@ -179,7 +168,7 @@ fun FuelScreen(vm: SimViewModel, modifier: Modifier = Modifier) {
                     0 -> FilterSel.A; 1 -> FilterSel.B; else -> FilterSel.BOTH
                 }
             }
-            Row {
+            WrapRow {
                 PushButton("BACKFLUSH FILTER", P.PanelHigh) { p.backflushFuelFilter() }
             }
             Spacer(Modifier.height(4.dp))

@@ -84,7 +84,7 @@ sight.
 
 ## Pages
 
-`UNIT` `ENGINE` `FUEL OIL` `COOLING` `ELECTRICAL` `SYSTEM` `ALARMS` `LOG` `NOTES`
+`UNIT` `ENGINE` `FUEL` `COOL` `ELEC` `SYSTEM` `ALARMS` `LOG` `NOTES`
 
 The NOTES page carries the standing orders: how to prepare a cold unit, start,
 change over to residual fuel, synchronise, take load, keep the watch, and black
